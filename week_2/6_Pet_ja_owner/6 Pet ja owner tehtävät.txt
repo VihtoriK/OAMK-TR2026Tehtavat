@@ -1,0 +1,22 @@
+owner taulukon luominen:
+CREATE TABLE owner (first_name VARCHAR(255), last_name VARCHAR(255), address VARCHAR(255), ownerID INT PRIMARY KEY AUTO_INCREMENT);
+
+owner taulukon täyttäminen:
+INSERT INTO owner VALUES('Harold', 'Lloyd', 'Someaddress 1', NULL);
+INSERT INTO owner VALUES('Gwen', 'Stefani', 'Someaddress 2', NULL);
+INSERT INTO owner VALUES('Benny', 'Hill', 'Someaddress 3', NULL);
+INSERT INTO owner VALUES('Diane', 'Keaton', 'Someaddress 4', NULL);
+
+pet taulukon muokkaus:
+ALTER TABLE pet DROP COLUMN owner;
+ALTER TABLE pet ADD COLUMN petID INT PRIMARY KEY AUTO_INCREMENT;
+ALTER TABLE pet ADD COLUMN ownerID INT;
+
+pet ja owner taulukkojen liittäminen:
+ALTER TABLE pet ADD CONSTRAINT FOREIGN KEY(ownerID) REFERENCES owner(ownerID);
+
+owner id asettaminen pet taulukkoon:
+UPDATE pet SET ownerID=1 WHERE name = 'Fluffy' OR name = 'Buffy';
+UPDATE pet SET ownerID=2 WHERE name = 'Claws' OR name = 'Chirpy' OR name = 'Whistler';
+UPDATE pet SET ownerID=3 WHERE name = 'Fang' OR name = 'Slim';
+UPDATE pet SET ownerID=4 WHERE name = 'Bowser';
