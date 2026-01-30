@@ -1,0 +1,42 @@
+mysql> SELECT * FROM Opintojakso;
++---------------+---------+---------+--------------------+
+| idOpintojakso | Koodi   | Laajuus | Nimi               |
++---------------+---------+---------+--------------------+
+|             4 | OH73JOL |       6 | Ohjelmointi Python |
+|             5 | 4TT3LPP |       4 | Matematiikka 1     |
+|             6 | 777LKKA |       6 | Saksa 1            |
+|             7 | 3OHTT44 |       7 | Fysiikka 1         |
++---------------+---------+---------+--------------------+
+4 rows in set (0.00 sec)
+
+
+mysql> SELECT * FROM Opiskelija;
++--------------+---------+----------+----------+--------------+
+| idOpiskelija | Etunimi | Sukunimi | Osoite   | Luokantunnus |
++--------------+---------+----------+----------+--------------+
+|            1 | Pekka   | Niemi    | Osoite 1 | TVT3ML       |
+|            2 | Tuija   | Kettunen | Osoite 2 | TVT3PL       |
+|            3 | Satu    | Laukkala | Osoite 3 | TVT3PO       |
+|            4 | Kalle   | Rantala  | Osoite 4 | TVT3PL       |
+|            5 | Josa    | Perälä   | Osoite 5 | TVT4MO       |
++--------------+---------+----------+----------+--------------+
+5 rows in set (0.00 sec)
+
+
+mysql> SELECT Etunimi, Sukunimi, Arvosana, Paivamaara, Nimi FROM Arviointi JOIN Opiskelija ON Opiskelija.idOpiskelija = Arviointi.idOpiskelija JOIN Opintojakso ON Opintojakso.idOpintojakso = Arviointi.idOpintojakso;
++---------+----------+----------+------------+--------------------+
+| Etunimi | Sukunimi | Arvosana | Paivamaara | Nimi               |
++---------+----------+----------+------------+--------------------+
+| Pekka   | Niemi    |        6 | 2014-01-15 | Ohjelmointi Python |
+| Kalle   | Rantala  |        5 | 2014-01-15 | Ohjelmointi Python |
+| Tuija   | Kettunen |        2 | 2014-05-02 | Matematiikka 1     |
+| Satu    | Laukkala |        4 | 2014-05-02 | Matematiikka 1     |
+| Kalle   | Rantala  |        4 | 2014-05-02 | Matematiikka 1     |
+| Josa    | Perälä   |        5 | 2013-12-16 | Saksa 1            |
+| Pekka   | Niemi    |        1 | 2013-09-20 | Saksa 1            |
+| Tuija   | Kettunen |        6 | 2013-09-20 | Saksa 1            |
+| Josa    | Perälä   |        7 | 2015-09-20 | Fysiikka 1         |
+| Satu    | Laukkala |        5 | 2015-09-20 | Fysiikka 1         |
+| Pekka   | Niemi    |        6 | 2015-09-20 | Fysiikka 1         |
++---------+----------+----------+------------+--------------------+
+11 rows in set (0.01 sec)
