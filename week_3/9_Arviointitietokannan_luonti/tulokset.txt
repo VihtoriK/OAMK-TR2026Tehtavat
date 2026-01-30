@@ -1,13 +1,14 @@
 mysql> SELECT * FROM Opintojakso;
-+---------------+---------+---------+--------------------+
-| idOpintojakso | Koodi   | Laajuus | Nimi               |
-+---------------+---------+---------+--------------------+
-|             4 | OH73JOL |       6 | Ohjelmointi Python |
-|             5 | 4TT3LPP |       4 | Matematiikka 1     |
-|             6 | 777LKKA |       6 | Saksa 1            |
-|             7 | 3OHTT44 |       7 | Fysiikka 1         |
-+---------------+---------+---------+--------------------+
-4 rows in set (0.00 sec)
++---------------+----------+---------+--------------------+
+| idOpintojakso | Koodi    | Laajuus | Nimi               |
++---------------+----------+---------+--------------------+
+|             4 | OH73JOL  |       6 | Ohjelmointi Python |
+|             5 | 4TT3LPP  |       4 | Matematiikka 1     |
+|             6 | 777LKKA  |       6 | Saksa 1            |
+|             7 | 3OHTT44  |       7 | Fysiikka 1         |
+|             8 | 4445VV0A |       5 | Viestintä 2        |
++---------------+----------+---------+--------------------+
+5 rows in set (0.00 sec)
 
 
 mysql> SELECT * FROM Opiskelija;
