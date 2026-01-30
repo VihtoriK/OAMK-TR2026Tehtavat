@@ -29,6 +29,7 @@ mysql> SELECT Etunimi, Sukunimi, Arvosana, Paivamaara, Nimi FROM Arviointi JOIN 
 +---------+----------+----------+------------+--------------------+
 | Pekka   | Niemi    |        6 | 2014-01-15 | Ohjelmointi Python |
 | Kalle   | Rantala  |        5 | 2014-01-15 | Ohjelmointi Python |
+| Satu    | Laukkala |        0 | 2014-01-15 | Ohjelmointi Python |
 | Tuija   | Kettunen |        2 | 2014-05-02 | Matematiikka 1     |
 | Satu    | Laukkala |        4 | 2014-05-02 | Matematiikka 1     |
 | Kalle   | Rantala  |        4 | 2014-05-02 | Matematiikka 1     |
@@ -38,5 +39,6 @@ mysql> SELECT Etunimi, Sukunimi, Arvosana, Paivamaara, Nimi FROM Arviointi JOIN 
 | Josa    | Perälä   |        7 | 2015-09-20 | Fysiikka 1         |
 | Satu    | Laukkala |        5 | 2015-09-20 | Fysiikka 1         |
 | Pekka   | Niemi    |        6 | 2015-09-20 | Fysiikka 1         |
+| Tuija   | Kettunen |        0 | 2015-09-20 | Fysiikka 1         |
 +---------+----------+----------+------------+--------------------+
-11 rows in set (0.01 sec)
+13 rows in set (0.00 sec)
