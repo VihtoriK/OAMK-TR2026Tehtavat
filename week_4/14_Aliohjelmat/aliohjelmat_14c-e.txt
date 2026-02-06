@@ -1,0 +1,240 @@
+c) Tee kirjastotietokantaan aliohjelma, joka tulostaa kaikki myöhässä olevat kirjat ja niiden lainaajat.
+
+CREATE PROCEDURE `myohassa` ()
+BEGIN
+select a.first_name, a.last_name from asiakas a join laina l 
+where a.asiakasID = l.asiakasID AND l.palautus_pvm <= curdate();
+END
+
+
+mysql> CALL myohassa();
++------------+-----------+
+| first_name | last_name |
++------------+-----------+
+| Kari       | Heinola   |
++------------+-----------+
+1 row in set (0.01 sec)
+
+Query OK, 0 rows affected (0.02 sec)
+
+
+
+
+d) Tee opintorekisteritietokantaan aliohjelma, joka lisää uuden opintosuorituksen. 
+Syötteeksi annetaan opiskelijan etunimi, sukunimi, kurssikoodi ja arvosana. 
+Aliohjelman pitää tarkistaa, että opiskelija ja opintojakso ovat olemassa ja että arvosana on välillä 0 - 5.
+
+
+CREATE PROCEDURE `lisaa_opintosuoritus` (
+IN Enimi VARCHAR(45),
+IN Snimi VARCHAR(45),
+IN Kurssi VARCHAR(45),
+IN Asana int
+)
+Func:BEGIN
+DECLARE OpiskelijaID INT DEFAULT 0;
+DECLARE KurssiID INT DEFAULT 0;
+
+SELECT idOpiskelija INTO OpiskelijaID FROM opiskelija 
+WHERE Etunimi = Enimi AND Sukunimi = Snimi;
+IF OpiskelijaID = 0 THEN
+	SELECT 'Opiskelijaa ei löytynyt';
+    LEAVE Func;
+END IF;
+
+SELECT idOpintojakso INTO KurssiID FROM opintojakso 
+WHERE Koodi = Kurssi;
+IF KurssiID = 0 THEN
+	SELECT 'Kurssia ei löytynyt';
+    LEAVE Func;
+END IF;
+
+IF Asana < 0 OR Asana > 5 THEN
+    SELECT 'Arvosana ei ole kelvollinen';
+    LEAVE Func;
+END IF;
+
+INSERT INTO arviointi (Paivamaara, Arvosana, idOpiskelija, idOpintojakso) 
+VALUES (CURDATE(), Asana, OpiskelijaID, KurssiID);
+
+END
+
+
+Testaus:
+
+mysql> CALL lisaa_opintosuoritus("Tuija", "Kettunen", "4445VV0A", 3);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> SELECT * FROM arviointi;
++-------------+------------+----------+--------------+---------------+
+| idArviointi | Paivamaara | Arvosana | idOpiskelija | idOpintojakso |
++-------------+------------+----------+--------------+---------------+
+|           1 | 2014-01-15 |        6 |            1 |             4 |
+|           2 | 2013-12-16 |        5 |            5 |             6 |
+|           3 | 2014-05-02 |        2 |            2 |             5 |
+|           4 | 2014-01-15 |        5 |            4 |             4 |
+|           5 | 2014-05-02 |        4 |            3 |             5 |
+|           6 | 2013-09-20 |        1 |            1 |             6 |
+|           7 | 2015-09-20 |        7 |            5 |             7 |
+|           8 | 2013-09-20 |        6 |            2 |             6 |
+|           9 | 2014-05-02 |        4 |            4 |             5 |
+|          10 | 2015-09-20 |        5 |            3 |             7 |
+|          11 | 2015-09-20 |        6 |            1 |             7 |
+|          12 | 2014-01-15 |        0 |            3 |             4 |
+|          13 | 2015-09-20 |        0 |            2 |             7 |
+|          14 | 2026-02-06 |        3 |            2 |             8 |  <----- Tämä tässä!!
++-------------+------------+----------+--------------+---------------+
+14 rows in set (0.00 sec)
+
+Kun opiskelija on väärin:
+
+mysql> CALL lisaa_opintosuoritus("Tuija", "KettunWn", "4445VV0A", 3);
++--------------------------+
+| Opiskelijaa ei löytynyt  |
++--------------------------+
+| Opiskelijaa ei löytynyt  |
++--------------------------+
+1 row in set (0.00 sec)
+
+Query OK, 0 rows affected (0.01 sec)
+
+
+Kun kurssi on väärin:
+
+mysql> CALL lisaa_opintosuoritus("Tuija", "Kettunen", "4E45VV0A", 3);
++----------------------+
+| Kurssia ei löytynyt  |
++----------------------+
+| Kurssia ei löytynyt  |
++----------------------+
+1 row in set (0.00 sec)
+
+
+
+
+
+e) Tee opintorekisteritietokantaan aliohjelma, joka poistaa opiskelijan opintosuorituksen. 
+Syötteeksi annetaan opiskelijan nimi ja opintojakson koodi. 
+Ohjelman pitää tarkistaa, että suoritus löytyy tietokannasta ennen poistoa. 
+Jos ei löydy, annetaan virheilmoitus.
+
+
+CREATE PROCEDURE `poista_opintosuoritus` (
+IN Enimi VARCHAR(45),
+IN Snimi VARCHAR(45),
+IN Kurssi VARCHAR(45)
+)
+Func:BEGIN
+DECLARE OpiskelijaID INT DEFAULT 0;
+DECLARE KurssiID INT DEFAULT 0;
+DECLARE ArvosanaID INT DEFAULT 0;
+
+SELECT idOpiskelija INTO OpiskelijaID FROM opiskelija 
+WHERE Etunimi = Enimi AND Sukunimi = Snimi;
+IF OpiskelijaID = 0 THEN
+	SELECT 'Opiskelijaa ei löytynyt';
+    LEAVE Func;
+END IF;
+
+SELECT idOpintojakso INTO KurssiID FROM opintojakso 
+WHERE Koodi = Kurssi;
+IF KurssiID = 0 THEN
+	SELECT 'Kurssia ei löytynyt';
+    LEAVE Func;
+END IF;
+
+SELECT idArviointi INTO ArvosanaID FROM arviointi 
+WHERE idOpiskelija = OpiskelijaID AND idOpintojakso = KurssiID;
+IF ArvosanaID = 0 THEN
+	SELECT 'Kyseisellä henkilöllä ei ole suoritusta kyseisestä kurssista';
+    LEAVE Func;
+END IF;
+
+DELETE FROM arviointi WHERE idArviointi = ArvosanaID;
+
+END
+
+Testaus: 
+
+mysql> SELECT * FROM arviointi;
++-------------+------------+----------+--------------+---------------+
+| idArviointi | Paivamaara | Arvosana | idOpiskelija | idOpintojakso |
++-------------+------------+----------+--------------+---------------+
+|           1 | 2014-01-15 |        6 |            1 |             4 |
+|           2 | 2013-12-16 |        5 |            5 |             6 |
+|           3 | 2014-05-02 |        2 |            2 |             5 |
+|           4 | 2014-01-15 |        5 |            4 |             4 |
+|           5 | 2014-05-02 |        4 |            3 |             5 |
+|           6 | 2013-09-20 |        1 |            1 |             6 |
+|           7 | 2015-09-20 |        7 |            5 |             7 |
+|           8 | 2013-09-20 |        6 |            2 |             6 |
+|           9 | 2014-05-02 |        4 |            4 |             5 |
+|          10 | 2015-09-20 |        5 |            3 |             7 |
+|          11 | 2015-09-20 |        6 |            1 |             7 |
+|          12 | 2014-01-15 |        0 |            3 |             4 |
+|          13 | 2015-09-20 |        0 |            2 |             7 |
+|          14 | 2026-02-06 |        3 |            2 |             8 |   <--- poistetaan d kohassa lisätty arvosana!!
++-------------+------------+----------+--------------+---------------+
+
+
+mysql> CALL poista_opintosuoritus("Tuija", "Kettunen", "4445VV0A");
+Query OK, 1 row affected (0.02 sec)
+
+
+mysql> SELECT * FROM arviointi;
++-------------+------------+----------+--------------+---------------+
+| idArviointi | Paivamaara | Arvosana | idOpiskelija | idOpintojakso |
++-------------+------------+----------+--------------+---------------+
+|           1 | 2014-01-15 |        6 |            1 |             4 |
+|           2 | 2013-12-16 |        5 |            5 |             6 |
+|           3 | 2014-05-02 |        2 |            2 |             5 |
+|           4 | 2014-01-15 |        5 |            4 |             4 |
+|           5 | 2014-05-02 |        4 |            3 |             5 |
+|           6 | 2013-09-20 |        1 |            1 |             6 |
+|           7 | 2015-09-20 |        7 |            5 |             7 |
+|           8 | 2013-09-20 |        6 |            2 |             6 |
+|           9 | 2014-05-02 |        4 |            4 |             5 |
+|          10 | 2015-09-20 |        5 |            3 |             7 |
+|          11 | 2015-09-20 |        6 |            1 |             7 |
+|          12 | 2014-01-15 |        0 |            3 |             4 |
+|          13 | 2015-09-20 |        0 |            2 |             7 |
++-------------+------------+----------+--------------+---------------+
+13 rows in set (0.00 sec)
+
+
+Lisäsin äskettäin poistetun suorituksen takaisin johon testaan näitä virheellisiä yrityksiä!
+
+Tilanteessa kun nimi on väärin:
+
+mysql> CALL poista_opintosuoritus("Tuija", "KettunWn", "4445VV0A");
++--------------------------+
+| Opiskelijaa ei löytynyt  |
++--------------------------+
+| Opiskelijaa ei löytynyt  |
++--------------------------+
+1 row in set (0.00 sec)
+
+
+Tilanteessa kun kurssi on väärin:
+
+mysql> CALL poista_opintosuoritus("Tuija", "Kettunen", "4W45VV0A");
++----------------------+
+| Kurssia ei löytynyt  |
++----------------------+
+| Kurssia ei löytynyt  |
++----------------------+
+1 row in set (0.00 sec)
+
+
+Tilanteessa kun nimi ja kurssi ei täsmää:
+
+mysql> CALL poista_opintosuoritus("Tuija", "Kettunen", "OH73JOL");
++------------------------------------------------------------------+
+| Kyseisellä henkilöllä ei ole suoritusta kyseisestä kurssista     |
++------------------------------------------------------------------+
+| Kyseisellä henkilöllä ei ole suoritusta kyseisestä kurssista     |
++------------------------------------------------------------------+
+1 row in set (0.01 sec)
+
+Query OK, 0 rows affected (0.02 sec)
+

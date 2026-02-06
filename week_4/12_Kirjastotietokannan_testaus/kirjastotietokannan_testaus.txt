@@ -1,0 +1,199 @@
+------------------------------------------------------------------------------------------------------
+Näin alkuunsa että tuli ylinmääräistä tekemistä koska kirjasto database oli nähtävästi jostakin syystä korruptoitunut joten jouduin tekemään koko jutun alustaasti ja tein hieman muutoksia jotentässä komenot joilla tein koko jutun: 
+
+CREATE TABLE tekija (tekijaID INT PRIMARY KEY AUTO_INCREMENT, first_name VARCHAR(45),  last_name VARCHAR(45), role VARCHAR(45));
+
+mysql> desc tekija;
++------------+-------------+------+-----+---------+----------------+
+| Field      | Type        | Null | Key | Default | Extra          |
++------------+-------------+------+-----+---------+----------------+
+| tekijaID   | int         | NO   | PRI | NULL    | auto_increment |
+| first_name | varchar(45) | YES  |     | NULL    |                |
+| last_name  | varchar(45) | YES  |     | NULL    |                |
+| role       | varchar(45) | YES  |     | NULL    |                |
++------------+-------------+------+-----+---------+----------------+
+
+
+CREATE TABLE teos (teosID INT PRIMARY KEY AUTO_INCREMENT, name VARCHAR(45), ISBN VARCHAR(45), publication_date DATE);
+
+mysql> desc teos;
++------------------+-------------+------+-----+---------+----------------+
+| Field            | Type        | Null | Key | Default | Extra          |
++------------------+-------------+------+-----+---------+----------------+
+| teosID           | int         | NO   | PRI | NULL    | auto_increment |
+| name             | varchar(45) | YES  |     | NULL    |                |
+| ISBN             | varchar(45) | YES  |     | NULL    |                |
+| publication_date | date        | YES  |     | NULL    |                |
++------------------+-------------+------+-----+---------+----------------+
+
+
+CREATE TABLE teos_tekija (teos_teosID INT, teos_tekijaID INT PRIMARY KEY AUTO_INCREMENT, tekija_tekijaID INT);
+
+mysql> desc teos_tekija;
++-----------------+------+------+-----+---------+----------------+
+| Field           | Type | Null | Key | Default | Extra          |
++-----------------+------+------+-----+---------+----------------+
+| teos_teosID     | int  | YES  |     | NULL    |                |
+| teos_tekijaID   | int  | NO   | PRI | NULL    | auto_increment |
+| tekija_tekijaID | int  | YES  |     | NULL    |                |
++-----------------+------+------+-----+---------+----------------+
+
+
+ALTER TABLE teos_tekija ADD CONSTRAINT FOREIGN KEY(teos_teosID) REFERENCES teos(teosID);
+ALTER TABLE teos_tekija ADD CONSTRAINT FOREIGN KEY(tekija_tekijaID) REFERENCES tekija(tekijaID);
+
+CREATE TABLE kirja (kirjaID INT PRIMARY KEY AUTO_INCREMENT, teosID INT, name VARCHAR(45), hyllyssa_kpl INT UNSIGNED, lainassa_kpl INT UNSIGNED, yhteensa_kpl INT UNSIGNED, hylly VARCHAR(45));
+
+mysql> desc kirja;
++--------------+--------------+------+-----+---------+----------------+
+| Field        | Type         | Null | Key | Default | Extra          |
++--------------+--------------+------+-----+---------+----------------+
+| kirjaID      | int          | NO   | PRI | NULL    | auto_increment |
+| teosID       | int          | YES  | MUL | NULL    |                |
+| name         | varchar(45)  | YES  |     | NULL    |                |
+| hyllyssa_kpl | int unsigned | YES  |     | NULL    |                |
+| lainassa_kpl | int unsigned | YES  |     | NULL    |                |
+| yhteensa_kpl | int unsigned | YES  |     | NULL    |                |
+| hylly        | varchar(45)  | YES  |     | NULL    |                |
++--------------+--------------+------+-----+---------+----------------+
+
+
+ALTER TABLE kirja ADD CONSTRAINT FOREIGN KEY(teosID) REFERENCES teos(teosID);
+
+CREATE TABLE asiakas (asiakasID INT PRIMARY KEY AUTO_INCREMENT, first_name VARCHAR(45), last_name VARCHAR(45), telephone_number VARCHAR(45), e_mail VARCHAR(45), address VARCHAR(45));
+
+mysql> desc asiakas;
++------------------+-------------+------+-----+---------+----------------+
+| Field            | Type        | Null | Key | Default | Extra          |
++------------------+-------------+------+-----+---------+----------------+
+| asiakasID        | int         | NO   | PRI | NULL    | auto_increment |
+| first_name       | varchar(45) | YES  |     | NULL    |                |
+| last_name        | varchar(45) | YES  |     | NULL    |                |
+| telephone_number | varchar(45) | YES  |     | NULL    |                |
+| e_mail           | varchar(45) | YES  |     | NULL    |                |
+| address          | varchar(45) | YES  |     | NULL    |                |
++------------------+-------------+------+-----+---------+----------------+
+
+
+CREATE TABLE laina (lainaID INT PRIMARY KEY AUTO_INCREMENT, kirjaID INT, asiakasID INT, lainaus_pvm DATE, palautus_pvm DATE, palautettu TINYINT DEFAULT 0);
+
+mysql> desc laina;
++--------------+---------+------+-----+---------+----------------+
+| Field        | Type    | Null | Key | Default | Extra          |
++--------------+---------+------+-----+---------+----------------+
+| lainaID      | int     | NO   | PRI | NULL    | auto_increment |
+| kirjaID      | int     | YES  | MUL | NULL    |                |
+| asiakasID    | int     | YES  | MUL | NULL    |                |
+| lainaus_pvm  | date    | YES  |     | NULL    |                |
+| palautus_pvm | date    | YES  |     | NULL    |                |
+| palautettu   | tinyint | YES  |     | 0       |                |
++--------------+---------+------+-----+---------+----------------+
+
+
+ALTER TABLE laina ADD CONSTRAINT FOREIGN KEY(kirjaID) REFERENCES kirja(kirjaID);
+ALTER TABLE laina ADD CONSTRAINT FOREIGN KEY(asiakasID) REFERENCES asiakas(asiakasID);
+
+
+Nyt voidaan alkaa tekemään varsianisia viikon tehtäviä!
+------------------------------------------------------------------------------------------------------
+
+
+1. Syötä jokaiseen kirjastotietokannan tauluun muutama tietue.
+Ainakin kaksi samaa kirjaa (pitää tallentua eri pääavaimille)
+Kirja, jossa on useampi kuin yksi tekijä. Lainaustapahtuma, 
+jossa asiakas on lainannut kirjan ja se on vielä lainassa.
+
+
+INSERT INTO tekija (first_name, last_name, role) VALUES ("Joanne", "Rowling", "kirjailija"), ("Emel", "Vuoristo", "kirjailija"), ("Alissa", "Sirkka", "kirjailija"), ("Ukko", "Hallikainen", "kirjailija"), ("Leila", "Knuuttila", "kirjailija");
+
+mysql> SELECT * FROM tekija;
++----------+------------+-------------+------------+
+| tekijaID | first_name | last_name   | role       |
++----------+------------+-------------+------------+
+|        1 | Joanne     | Rowling     | kirjailija |
+|        2 | Emel       | Vuoristo    | kirjailija |
+|        3 | Alissa     | Sirkka      | kirjailija |
+|        4 | Ukko       | Hallikainen | kirjailija |
+|        5 | Leila      | Knuuttila   | kirjailija |
++----------+------------+-------------+------------+
+
+
+
+
+INSERT INTO teos (name, ISBN, publication_date) VALUES ("Harry Potter ja viisasten kivi", "9788869183157", '1997-06-26'), ("Roskaruokaa ABC perusteet", "9999999999999", '2026-01-01');
+
+mysql> SELECT * FROM teos;
++--------+--------------------------------+---------------+------------------+
+| teosID | name                           | ISBN          | publication_date |
++--------+--------------------------------+---------------+------------------+
+|      1 | Harry Potter ja viisasten kivi | 9788869183157 | 1997-06-26       |
+|      2 | Roskaruokaa ABC perusteet      | 9999999999999 | 2026-01-01       |
++--------+--------------------------------+---------------+------------------+
+
+
+
+
+INSERT INTO teos_tekija (teos_teosID, tekija_tekijaID) VALUES (1, 1), (2, 2), (2, 3), (2, 4), (2, 5);
+mysql> SELECT * FROM teos_tekija;
+
++-------------+---------------+-----------------+
+| teos_teosID | teos_tekijaID | tekija_tekijaID |
++-------------+---------------+-----------------+
+|           1 |             1 |               1 |
+|           2 |             2 |               2 |
+|           2 |             3 |               3 |
+|           2 |             4 |               4 |
+|           2 |             5 |               5 |
++-------------+---------------+-----------------+
+
+
+
+
+INSERT INTO kirja (teosID, name, hyllyssa_kpl, lainassa_kpl, yhteensa_kpl, hylly) VALUES (1, "Harry Potter ja viisasten kivi", 5, 0, 5, "Romaanit 12"), (2, "Roskaruokaa ABC perusteet", 3, 1, 4, "VainElämää 293"), (2, "Roskaruokaa ABC perusteet", 2, 0, 2, "VainElämää 293");
+
+mysql> SELECT * FROM kirja;
++---------+--------+--------------------------------+--------------+--------------+--------------+-------------------+
+| kirjaID | teosID | name                           | hyllyssa_kpl | lainassa_kpl | yhteensa_kpl | hylly             |
++---------+--------+--------------------------------+--------------+--------------+--------------+-------------------+
+|       1 |      1 | Harry Potter ja viisasten kivi |            5 |            0 |            5 | Romaanit 12       |
+|       2 |      2 | Roskaruokaa ABC perusteet      |            3 |            1 |            4 | VainElämää 293    |
+|       3 |      2 | Roskaruokaa ABC perusteet      |            2 |            0 |            2 | VainElämää 293    |
++---------+--------+--------------------------------+--------------+--------------+--------------+-------------------+
+
+
+
+
+INSERT INTO asiakas (first_name, last_name, telephone_number, e_mail, address) VALUES ("Kari", "Heinola", "+35A763123987", "kheinola@gmail.com", "Osoitetie 123");
+
+mysql> SELECT * FROM asiakas;
++-----------+------------+-----------+------------------+--------------------+---------------+
+| asiakasID | first_name | last_name | telephone_number | e_mail             | address       |
++-----------+------------+-----------+------------------+--------------------+---------------+
+|         1 | Kari       | Heinola   | +35A763123987    | kheinola@gmail.com | Osoitetie 123 |
++-----------+------------+-----------+------------------+--------------------+---------------+
+
+
+
+
+INSERT INTO laina (kirjaID, asiakasID, lainaus_pvm, palautus_pvm) VALUES (1, 1, '2026-02-06', '2026-03-06');
+
+mysql> SELECT * FROM laina;
++---------+---------+-----------+-------------+--------------+------------+
+| lainaID | kirjaID | asiakasID | lainaus_pvm | palautus_pvm | palautettu |
++---------+---------+-----------+-------------+--------------+------------+
+|       1 |       1 |         1 | 2026-02-06  | 2026-03-06   |          0 |
++---------+---------+-----------+-------------+--------------+------------+
+
+
+
+
+hups vahingossa tuli laitettua väärä kirja joten korjataan:
+UPDATE laina SET kirjaID = 2 WHERE lainaID = 1;
+
+mysql> SELECT * FROM laina;
++---------+---------+-----------+-------------+--------------+------------+
+| lainaID | kirjaID | asiakasID | lainaus_pvm | palautus_pvm | palautettu |
++---------+---------+-----------+-------------+--------------+------------+
+|       1 |       2 |         1 | 2026-02-06  | 2026-03-06   |          0 |
++---------+---------+-----------+-------------+--------------+------------+
+

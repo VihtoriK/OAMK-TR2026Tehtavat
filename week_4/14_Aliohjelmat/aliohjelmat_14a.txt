@@ -1,0 +1,68 @@
+CREATE PROCEDURE LisaaTeos (
+IN Etunimi VARCHAR(45),
+IN Sukunimi VARCHAR(45),
+IN Rooli VARCHAR(45),
+IN Teoksen_nimi VARCHAR(45),
+IN Isbn VARCHAR(45),
+IN PublicationDate DATE)
+
+BEGIN
+
+DECLARE TeosID INT DEFAULT 0;
+DECLARE TekijaID INT DEFAULT 0;
+DECLARE TeosTekijaID INT DEFAULT 0;
+
+SELECT teosID INTO TeosID FROM teos WHERE name = Teoksen_nimi;
+
+IF TeosID = 0 THEN
+	INSERT INTO teos (name, ISBN, publication_date) VALUES (Teoksen_nimi, Isbn, PublicationDate);
+	SELECT LAST_INSERT_ID() INTO TeosID;
+END IF;
+
+IF Etunimi IS NOT NULL AND Sukunimi IS NOT NULL THEN
+	SELECT tekijaID INTO TekijaID FROM tekija WHERE first_name = Etunimi AND last_name = Sukunimi;
+	IF TekijaID = 0 THEN
+		INSERT INTO tekija (first_name, last_name, role) VALUES (Etunimi, Sukunimi, Rooli);
+		SELECT LAST_INSERT_ID() INTO TekijaID;
+	END IF;
+END IF;
+
+SELECT COUNT(*) INTO TeosTekijaID FROM teos_tekija WHERE tekija_tekijaID = TekijaID AND teos_teosID = TeosID;
+
+IF TeosTekijaID = 0 THEN
+	INSERT INTO teos_tekija (tekija_tekijaID, teos_teosID) VALUES (TekijaID, TeosID);
+END IF;
+
+END
+
+
+
+Ja testataan:
+
+mysql> CALL LisaaTeos("Kalle", "Luikku", "Kirjailija", "Kova Elämä", "9299999299992", "2026-02-05");
+Query OK, 1 row affected (0.04 sec)
+
+mysql> SELECT * FROM teos;
++--------+--------------------------------+---------------+------------------+
+| teosID | name                           | ISBN          | publication_date |
++--------+--------------------------------+---------------+------------------+
+|      1 | Harry Potter ja viisasten kivi | 9788869183157 | 1997-06-26       |
+|      2 | Roskaruokaa ABC perusteet      | 9999999999999 | 2026-01-01       |
+|      3 | Kova Elämä                     | 9299999299992 | 2026-02-05       |
++--------+--------------------------------+---------------+------------------+
+3 rows in set (0.00 sec)
+
+mysql> SELECT * FROM tekija;
++----------+------------+-------------+------------+
+| tekijaID | first_name | last_name   | role       |
++----------+------------+-------------+------------+
+|        1 | Joanne     | Rowling     | kirjailija |
+|        2 | Emel       | Vuoristo    | kirjailija |
+|        3 | Alissa     | Sirkka      | kirjailija |
+|        4 | Ukko       | Hallikainen | kirjailija |
+|        5 | Leila      | Knuuttila   | kirjailija |
+|        6 | Kalle      | Luikku      | Kirjailija |
++----------+------------+-------------+------------+
+6 rows in set (0.00 sec)
+
+Toimii!

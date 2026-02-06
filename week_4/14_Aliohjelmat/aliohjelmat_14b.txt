@@ -1,0 +1,80 @@
+CREATE PROCEDURE Uusi_Lainaus (
+IN Etunimi VARCHAR(45),
+IN Sukunimi VARCHAR(45),
+IN Kirjan_nimi VARCHAR(45)
+)
+
+Aliohjelma:BEGIN
+DECLARE N INT DEFAULT 0;
+DECLARE M INT DEFAULT 0;
+DECLARE AsiakasID INT DEFAULT 0;
+DECLARE KirjaID INT DEFAULT 0;
+
+SELECT asiakasID INTO AsiakasID FROM asiakas WHERE first_name = Etunimi AND last_name = Sukunimi;
+
+IF AsiakasID = 0 THEN
+	SELECT 'Lainaajaa ei löydy';
+	LEAVE Aliohjelma;
+END IF;
+
+SELECT kirjaID INTO KirjaID FROM teos WHERE name = Kirjan_nimi;
+
+IF KirjaID = 0 THEN
+	SELECT 'Kirjaa ei löydy';
+	LEAVE Aliohjelma;
+END IF;
+
+SELECT k.kirjaID INTO N FROM teos t JOIN kirja k ON t.teosID = k.teosID 
+LEFT JOIN laina l ON l.kirjaID = k.kirjaID 
+WHERE t.teosID = KirjaID AND k.lainassa_kpl > k.yhteensa_kpl LIMIT 1;
+
+IF N = 0 THEN
+	SELECT 'Kaikki kirjat lainassa';
+	LEAVE Aliohjelma;
+END IF;
+
+INSERT INTO laina (kirjaID, asiakasID, lainaus_pvm, palautus_pvm) VALUES (N, AsiakasID, CURDATE(), DATE_ADD(CURDATE(), INTERVAL 30 DAY));
+UPDATE kirja SET hyllyssa_kpl = (hyllyssa_kpl - 1), lainassa_kpl = (lainassa_kpl + 1) WHERE kirjaID = N;
+
+END
+
+
+Jostain ihmeen syystä se ei löydä mun ainoata asiaksata taulusta
+
+mysql> SELECT * FROM asiakas;
++-----------+------------+-----------+------------------+--------------------+---------------+
+| asiakasID | first_name | last_name | telephone_number | e_mail             | address       |
++-----------+------------+-----------+------------------+--------------------+---------------+
+|         1 | Kari       | Heinola   | +35A763123987    | kheinola@gmail.com | Osoitetie 123 |
++-----------+------------+-----------+------------------+--------------------+---------------+
+1 row in set (0.00 sec)
+
+mysql> CALL Uusi_Lainaus("Kari", "Heinola", "Harry Potter ja viisasten kivi");
++---------------------+
+| Lainaajaa ei löydy  |
++---------------------+
+| Lainaajaa ei löydy  |
++---------------------+
+1 row in set (0.01 sec)
+
+Query OK, 0 rows affected (0.01 sec)
+
+Testasin lisäämällä kaksi asiakasta mutta siltikään ei toimi 
+
+mysql> SELECT * FROM asiakas;
++-----------+------------+-----------+------------------+--------------------+---------------+
+| asiakasID | first_name | last_name | telephone_number | e_mail             | address       |
++-----------+------------+-----------+------------------+--------------------+---------------+
+|         1 | Kari       | Heinola   | +35A763123987    | kheinola@gmail.com | Osoitetie 123 |
+|         2 | Leena      | Kalju     | +35A463325937    | lkalju@gmail.com   | Osoitetie 345 |
+|         3 | Tuomo      | Lauha     | +35A44335599e    | TLauha@gmail.com   | Osoitetie 234 |
++-----------+------------+-----------+------------------+--------------------+---------------+
+3 rows in set (0.00 sec)
+
+mysql> CALL Uusi_Lainaus("Tuomo", "Lauha", "Harry Potter ja viisasten kivi");
++---------------------+
+| Lainaajaa ei löydy  |
++---------------------+
+| Lainaajaa ei löydy  |
++---------------------+
+1 row in set (0.01 sec)
