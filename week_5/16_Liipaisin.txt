@@ -1,0 +1,73 @@
+a) Tee ensin Muutokset-niminen uusi taulu. Katso rakenne oppimateriaalista. Tee sitten Opiskelija-tauluun liipaisin, jotka päivittävät Muutokset-taulun sen jälkeen kun opiskelija lisätään (AFTER INSERT)  tai opiskelijan tietoja muutetaan (AFTER UPDATE).
+
+Luodaan taulu:
+mysql> CREATE TABLE muutokset (idMuutokset INT PRIMARY KEY AUTO_INCREMENT, pvm DATETIME, toiminto VARCHAR(45));
+Query OK, 0 rows affected (0.03 sec) 
+
+Liipaisimet Opiskelija-taulussa:
+
+AFTER INSERT:
+CREATE DEFINER = CURRENT_USER TRIGGER `tietokanta2026`.`opiskelija_AFTER_INSERT` AFTER INSERT ON `opiskelija` FOR EACH ROW
+BEGIN
+	INSERT INTO muutokset (pvm, toiminto) VALUES(now(), 'Opiskelija lisätty opiskelija tauluun');
+END
+
+
+AFTER UPDATE:
+CREATE DEFINER = CURRENT_USER TRIGGER `tietokanta2026`.`opiskelija_AFTER_UPDATE` AFTER UPDATE ON `opiskelija` FOR EACH ROW
+BEGIN
+	INSERT INTO muutokset (pvm, toiminto) VALUES(now(), concat(OLD.Etunimi, ', ', OLD.Sukunimi, ', ', OLD.Osoite, ', ', OLD.Luokantunnus));
+END
+
+Testaus:
+
+mysql> insert into opiskelija values (NULL, 'Ville', 'Kalkkuna', 'Osoite 233', 'TVT25SPL');
+Query OK, 1 row affected (0.02 sec)
+
+mysql> select * from muutokset;
++-------------+---------------------+----------------------------------------+
+| idMuutokset | pvm                 | toiminto                               |
++-------------+---------------------+----------------------------------------+
+|           1 | 2026-02-12 22:36:42 | Opiskelija lisätty opiskelija tauluun  |
++-------------+---------------------+----------------------------------------+
+1 row in set (0.00 sec)
+
+mysql> UPDATE Opiskelija SET Luokantunnus='TVT25SPO' WHERE idOpiskelija=6;
+Query OK, 1 row affected (0.02 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+mysql> select * from muutokset;
++-------------+---------------------+----------------------------------------+
+| idMuutokset | pvm                 | toiminto                               |
++-------------+---------------------+----------------------------------------+
+|           1 | 2026-02-12 22:36:42 | Opiskelija lisätty opiskelija tauluun  |
+|           2 | 2026-02-12 22:49:15 | Ville, Kalkkuna, Osoite 233, TVT25SPO  |
++-------------+---------------------+----------------------------------------+
+2 rows in set (0.00 sec)
+
+
+
+
+b) Tee Roskakori-taulu. Roskakoriin tallennetaan tiedot kaikista poistetuista tietueista (Opiskelija, Arviointi ja Opintojakso-taulut) käyttäen liipaisinta (BEFORE DELETE). Koska tauluissa on eri määrä kenttiä, tietueet yhdistetään ensin CONCAT-lauseella yhdeksi merkkijonoksi, joka tallennetaan roskakoriin:
+
+Luodaan taulu:
+mysql> CREATE TABLE Roskakori (idRoskakori INT PRIMARY KEY AUTO_INCREMENT, pvm DATETIME, taulun_tiedot VARCHAR(90));
+Query OK, 0 rows affected (0.04 sec)
+
+opiskelija BEFORE DELETE liipaisin:
+CREATE DEFINER = CURRENT_USER TRIGGER `tietokanta2026`.`opiskelija_BEFORE_DELETE` BEFORE DELETE ON `opiskelija` FOR EACH ROW
+BEGIN
+	DECLARE str VARCHAR(145);
+	SET str=CONCAT(OLD.idOpiskelija,' ',OLD.Etunimi,' ',OLD.Sukunimi,' ',OLD.Luokantunnus);
+	INSERT INTO roskakori VALUES(NULL,NOW(),str);
+END
+
+arviointi BEFORE DELETE liipaisin:
+CREATE DEFINER = CURRENT_USER TRIGGER `tietokanta2026`.`arviointi_BEFORE_DELETE` BEFORE DELETE ON `arviointi` FOR EACH ROW
+BEGIN
+	DECLARE str VARCHAR(145);
+	SET str=CONCAT(OLD.idArviointi,', ',OLD.Paivamaara,', ',OLD.Arvosana,', ',OLD.idOpiskelija,', ',OLD.idOpintojakso);
+	INSERT INTO roskakori VALUES(NULL,NOW(),str);
+END
+
+opintojakso BEFORE DELETE liipaisin:
